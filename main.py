@@ -26,7 +26,6 @@ from common.math_torch import se3
 from data_modelnet40 import ModelNet40
 from data_icl import TrainData, TestData
 from data import dataset
-from data.kitti_data import KittiDataset
 
 class IOStream:
     def __init__(self, path):
@@ -73,7 +72,7 @@ def test_one_epoch(args, net, test_loader):
         num_examples += batch_size
         
         rotation_ab_pred, translation_ab_pred,\
-            loss1, loss2, loss3 = net(src, target)
+            loss1, loss2, loss3 = net(src, target) #  global_alignment_loss, consensus_loss, spatial_consistency_loss
         rotations_ab.append(rotation_ab.detach().cpu().numpy())
         translations_ab.append(translation_ab.detach().cpu().numpy())
         rotations_ab_pred.append(rotation_ab_pred.detach().cpu().numpy())
@@ -176,7 +175,7 @@ def train(args, net, train_loader, test_loader, boardio, textio):
     checkpoint = None
     if args.resume:
         textio.cprint("start resume from checkpoint...........")
-        if args.model_path is '':
+        if args.model_path == '':
             model_path = 'checkpoints' + '/' + args.exp_name + '/models/model.best.t7'
             print(model_path)
         else:
@@ -347,6 +346,7 @@ def parse_args_from_yaml(yaml_path):
 
 def main():
     args = parse_args_from_yaml(sys.argv[1])
+    print(args)
     torch.backends.cudnn.deterministic = True
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
@@ -386,6 +386,7 @@ def main():
         test_loader = DataLoader(test_data, args.batch_size)
 
     elif args.dataset == 'kitti':
+        from data.kitti_data import KittiDataset
         train_seqs = ['00','01','02','03','04','05']
         train_dataset = KittiDataset(args.root, train_seqs, args.n_points, args.voxel_size, args.data_list, 'Train', args.augment)
         train_loader = DataLoader(train_dataset,
@@ -403,7 +404,7 @@ def main():
     if args.model == 'RIENET':
         net = RIENET(args).cuda()
         if args.eval:
-            if args.model_path is '':
+            if args.model_path == '':
                 model_path = 'pretrained' + '/' + args.exp_name + '/model.best.t7'
             else:
                 model_path = args.model_path

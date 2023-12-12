@@ -2,8 +2,10 @@
 import os
 import copy
 import numpy
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+# import importlib
+# mpl_toolkits = importlib.import_module('mpl_toolkits')
+# from mpl_toolkits.mplot3d import Axes3D
+# from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 # import matplotlib.pyplot
 
 # used to read ply files
