@@ -157,3 +157,5 @@ cython_debug/
 out_sbatch/
 checkpoints/modelnet/
 data/
+
+output/

@@ -346,7 +346,6 @@ def parse_args_from_yaml(yaml_path):
 
 def main():
     args = parse_args_from_yaml(sys.argv[1])
-    print(args)
     torch.backends.cudnn.deterministic = True
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)

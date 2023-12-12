@@ -75,6 +75,8 @@ class SVDHead(nn.Module):
 
         # pseudo correspondences of source point clouds (pseudo target point clouds)
         src_corr = torch.matmul(tgt, refined_matching_map.transpose(2, 1).contiguous())# [b,3,n] Eq. (4)
+        np.save('target.npy', tgt.detach().cpu().numpy())
+        np.save('src_corr.npy', src_corr.detach().cpu().numpy())
 
         ############################## Inlier Evaluation Module ##############################
         # neighborhoods of pseudo target point clouds
@@ -87,6 +89,8 @@ class SVDHead(nn.Module):
         
         # inlier confidence
         weight = self.weight_function(knn_distance, src_knn_distance)#[b, 1, n] # Eq. (7)
+        np.save('weight.npy', weight.detach().cpu().numpy())
+        np.save()
 
         # compute rigid transformation 
         R, t = compute_rigid_transformation(src, src_corr, weight) # weighted SVD
