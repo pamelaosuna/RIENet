@@ -63,6 +63,7 @@ def test_one_epoch(args, net, test_loader):
     translations_ab_pred = []
     
     for src, target, rotation_ab, translation_ab in tqdm(test_loader):
+        print(src.shape, target.shape)
         src = src.cuda()
         target = target.cuda()
         rotation_ab = rotation_ab.cuda()

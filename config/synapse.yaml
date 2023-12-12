@@ -41,10 +41,10 @@ list_k1: [5,5,5]
 list_k2: [5,5,5]
 emb_dims: 256
 n_iters: 3
-n_points: 676422
-n_subsampled_points: 584018
-batch_size: 16
-test_batch_size: 16
+n_points: 584018 # 676422
+n_subsampled_points: 8000 # 584018
+batch_size: 1
+test_batch_size: 1
 epochs: 50
 use_sgd: False
 n_keypoints: 256

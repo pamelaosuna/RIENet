@@ -58,12 +58,12 @@ def test_one_epoch(args, net, test_loader):
 
     total_loss = 0
     num_examples = 0
-    rotations_ab = []
-    translations_ab = []
     rotations_ab_pred = []
     translations_ab_pred = []
     
+    print(len(test_loader))
     for src, target in tqdm(test_loader):
+        print(src.shape, target.shape)
         src = src.cuda()
         target = target.cuda()
 
@@ -80,51 +80,19 @@ def test_one_epoch(args, net, test_loader):
     rotations_ab_pred = np.concatenate(rotations_ab_pred, axis=0)
     translations_ab_pred = np.concatenate(translations_ab_pred, axis=0)
 
-    return total_loss * 1.0 / num_examples, rotations_ab, \
-           translations_ab, rotations_ab_pred, translations_ab_pred
+    return total_loss * 1.0 / num_examples, rotations_ab_pred, translations_ab_pred
 
 def test(args, net, test_loader, boardio, textio):
     with torch.no_grad():
-        test_loss, test_rotations_ab, test_translations_ab, \
-        test_rotations_ab_pred, \
+        test_loss, test_rotations_ab_pred, \
         test_translations_ab_pred = test_one_epoch(args, net, test_loader)
 
     pred_transforms = torch.from_numpy(np.concatenate([test_rotations_ab_pred,test_translations_ab_pred.reshape(-1,3,1)], axis=-1))
-    gt_transforms = torch.from_numpy(np.concatenate([test_rotations_ab,test_translations_ab.reshape(-1,3,1)], axis=-1))
-    concatenated = se3.concatenate(se3.inverse(gt_transforms), pred_transforms)
-    rot_trace = concatenated[:, 0, 0] + concatenated[:, 1, 1] + concatenated[:, 2, 2]
-    residual_rotdeg = (torch.acos(torch.clamp(0.5 * (rot_trace - 1), min=-1.0, max=1.0)) * 180.0 / np.pi).detach().cpu().numpy()
-    residual_transmag = concatenated[:, :, 3].norm(dim=-1).detach().cpu().numpy()
-
-    deg_mean = np.mean(residual_rotdeg) #/.////
-    deg_rmse = np.sqrt(np.mean(residual_rotdeg**2))
-
-    trans_mean = np.mean(residual_transmag) #/.////
-    trans_rmse = np.sqrt(np.mean(residual_transmag**2))
 
     test_rotations_ab_pred_euler = npmat2euler(test_rotations_ab_pred)
-    test_eulers_ab = npmat2euler(test_rotations_ab)
-    test_r_mse_ab = np.mean((test_rotations_ab_pred_euler - test_eulers_ab) ** 2)
-    test_r_rmse_ab = np.sqrt(test_r_mse_ab)
-    test_r_mae_ab = np.mean(np.abs(test_rotations_ab_pred_euler - test_eulers_ab))
-    test_t_mse_ab = np.mean((test_translations_ab - test_translations_ab_pred) ** 2)
     # from sklearn.metrics import r2_score
     # r_ab_r2_score = r2_score(test_eulers_ab, test_rotations_ab_pred_euler)
     # t_ab_r2_score = r2_score(test_translations_ab, test_translations_ab_pred)
-
-    test_t_rmse_ab = np.sqrt(test_t_mse_ab)
-    test_t_mae_ab = np.mean(np.abs(test_translations_ab - test_translations_ab_pred))
-
-
-    textio.cprint('==FINAL TEST==')
-    textio.cprint('A--------->B')
-    textio.cprint('EPOCH:: %d, Loss: %f, rot_MSE: %f, rot_RMSE: %f,'
-                  'rot_MAE: %f, trans_MSE: %f, trans_RMSE: %f, trans_MAE: %f, deg_mean: %f, deg_rmse: %f, trans_mean: %f, trans_rmse: %f: '
-                  % (-1, test_loss,
-                     test_r_mse_ab, test_r_rmse_ab,
-                     test_r_mae_ab, test_t_mse_ab, test_t_rmse_ab, test_t_mae_ab,
-                     deg_mean,deg_rmse,trans_mean,trans_rmse))
-
 
 def parse_args_from_yaml(yaml_path):
     with open(yaml_path, 'r',encoding='utf-8') as fd:
@@ -146,14 +114,9 @@ def main():
     textio.cprint(str(args))
 
     if args.dataset == 'synapse':
-        # train_loader = DataLoader(SynapseDataset(num_points=args.n_points,
-        #                                      num_subsampled_points=args.n_subsampled_points,
-        #                                      partition='train', gaussian_noise=args.gaussian_noise,
-        #                                      unseen=args.unseen, rot_factor=args.rot_factor),
-        #                           batch_size=args.batch_size, shuffle=True, drop_last=True, num_workers=6)
         test_loader = DataLoader(SynapseDataset(num_points=args.n_points,
                                             num_subsampled_points=args.n_subsampled_points,
-                                            partition='test', gaussian_noise=args.gaussian_noise,
+                                            partition='ZSeries-11132023', gaussian_noise=args.gaussian_noise,
                                             unseen=args.unseen, rot_factor=args.rot_factor),
                                  batch_size=args.test_batch_size, shuffle=False, drop_last=False, num_workers=6)
 
